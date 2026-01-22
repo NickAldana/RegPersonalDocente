@@ -1,0 +1,394 @@
+/* =========================================================
+   SIA - SISTEMA INTEGRADO DE ACREDITACIÓN
+   IDENTIDAD CORPORATIVA: UPDS SANTA CRUZ
+   Versión 4.0 - Arquitectura Modular Namespaced
+   ========================================================= */
+
+:root {
+    /* --- PALETA EJECUTIVA UPDS --- */
+    --upds-blue: #003566;
+    --upds-blue-dark: #001d3d;
+    --upds-blue-light: #00509d;
+    --upds-gold: #ffc300;
+    --upds-gray-bg: #f8fafc;
+    
+    /* --- TOKENS DE DISEÑO --- */
+    --sia-shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+    --sia-shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    --sia-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---------------------------------------------------------
+   1. CORE & LAYOUT (.sia-core-)
+   --------------------------------------------------------- */
+body {
+    background-color: var(--upds-gray-bg);
+    letter-spacing: -0.01em;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+[x-cloak] { display: none !important; }
+
+.sia-core-scrollbar::-webkit-scrollbar { width: 5px; }
+.sia-core-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.sia-core-scrollbar::-webkit-scrollbar-thumb { 
+    background: rgba(0, 53, 102, 0.1); 
+    border-radius: 10px; 
+}
+
+/* ---------------------------------------------------------
+   2. NAVEGACIÓN INSTITUCIONAL (.sia-nav-)
+   --------------------------------------------------------- */
+.sia-nav-sidebar {
+    background-color: var(--upds-blue) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Tarjeta de Perfil Superior */
+.sia-nav-user-card {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+    transition: var(--sia-transition);
+}
+
+.sia-nav-user-card:hover {
+    border-color: var(--upds-gold);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Enlaces de Menú */
+.sia-nav-link {
+    color: rgba(255, 255, 255, 0.65) !important;
+    transition: var(--sia-transition);
+}
+
+.sia-nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    color: white !important;
+    transform: translateX(4px);
+}
+
+.sia-nav-link-active {
+    background-color: var(--upds-gold) !important;
+    color: var(--upds-blue) !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(255, 195, 0, 0.3);
+}
+
+/* ---------------------------------------------------------
+   3. MÓDULO DE AUTENTICACIÓN (.sia-auth-)
+   --------------------------------------------------------- */
+.sia-auth-bg {
+    background: radial-gradient(circle at top right, var(--upds-blue-light), var(--upds-blue-dark));
+    min-height: 100vh;
+    display: flex;
+}
+
+.sia-auth-card {
+    border: none;
+    border-radius: 2rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    background-color: #ffffff;
+    overflow: hidden;
+}
+
+.sia-auth-header {
+    background-color: var(--upds-blue);
+    padding: 3rem 2rem;
+    border-bottom: 5px solid var(--upds-gold);
+}
+
+.sia-auth-btn {
+    background-color: var(--upds-blue);
+    color: white;
+    font-weight: 800;
+    border-radius: 1rem;
+    transition: var(--sia-transition);
+}
+
+.sia-auth-btn:hover {
+    background-color: var(--upds-blue-light);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 53, 102, 0.2);
+}
+
+/* ---------------------------------------------------------
+   4. COMPONENTES DE INTERFAZ (.sia-ui-)
+   --------------------------------------------------------- */
+
+/* Indicador Live Pulse */
+.sia-ui-pulse {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #fb7185;
+    border-radius: 50%;
+    position: relative;
+}
+
+.sia-ui-pulse::after {
+    content: '';
+    position: absolute;
+    width: 100%; height: 100%;
+    background-color: inherit;
+    border-radius: 50%;
+    animation: sia-pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+@keyframes sia-pulse-ring {
+    0% { transform: scale(.33); opacity: 1; }
+    80%, 100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* Utilidades de Texto */
+.sia-ui-text-gold { color: var(--upds-gold); }
+.sia-ui-fw-black { font-weight: 900; }
+
+/* =========================================================
+   SIA - INTERFAZ EJECUTIVA v12.0 (FINAL)
+   ========================================================= */
+:root {
+    --upds-blue: #003566;
+    --upds-gold: #ffc300;
+    --upds-gray-bg: #f4f7fa;
+    --upds-input-bg: #f8fafc;
+}
+
+body { background-color: var(--upds-gray-bg); font-family: 'Inter', sans-serif; overflow: hidden; }
+
+/* BOTÓN VOLVER: Con vida e interactividad */
+.btn-sia-back {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 24px;
+    background-color: white;
+    color: var(--upds-blue);
+    border: 2px solid #e2e8f0;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-sia-back:hover {
+    background-color: var(--upds-blue);
+    color: white;
+    border-color: var(--upds-blue);
+    transform: translateX(-5px);
+    box-shadow: 0 5px 15px rgba(0, 53, 102, 0.2);
+}
+
+/* CAMPOS SUPERIORES: Menos blancos, más elegantes */
+.sia-input-panel {
+    background-color: var(--upds-input-bg) !important;
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    color: var(--upds-blue) !important;
+}
+
+/* PANEL DIVIDIDO */
+.sia-split-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 20px;
+    height: calc(100vh - 180px);
+}
+
+.sia-panel-card {
+    background: white;
+    border-radius: 18px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+.sia-panel-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+/* TARJETAS DE SELECCIÓN (MATERIA Y DOCENTE) */
+.sia-item-card {
+    display: flex;
+    align-items: center;
+    padding: 12px 18px;
+    margin-bottom: 8px;
+    border: 1px solid #f1f5f9;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.sia-item-card:hover { border-color: var(--upds-blue); background-color: #f8fafc; }
+
+.sia-item-card.active {
+    background-color: var(--upds-blue) !important;
+    color: white !important;
+    border-color: var(--upds-blue);
+}
+
+/* CIRCULO DE CHECK */
+.sia-hidden-radio { display: none !important; }
+
+.sia-indicator-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.active .sia-indicator-dot { background-color: var(--upds-gold); border-color: var(--upds-gold); }
+.active .sia-indicator-dot i { color: var(--upds-blue); font-size: 12px; }
+
+/* BOTÓN ASIGNAR: Grande y localizado */
+.btn-sia-assign {
+    background-color: var(--upds-blue) !important;
+    color: white !important;
+    padding: 18px 40px !important;
+    border-radius: 50px !important;
+    font-weight: 900 !important;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border: none !important;
+    width: 100%;
+    box-shadow: 0 10px 20px rgba(0, 53, 102, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-sia-assign:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(0, 53, 102, 0.4);
+}
+
+/* =========================================================
+   SIA - ESTILO "CLEAN ADMIN" v16.0 (FIXED)
+   ========================================================= */
+
+/* 1. ENCABEZADO ORDENADO */
+.sia-header-container {
+    display: flex;
+    justify-content: space-between; /* Separa título a la izq y botón a la der */
+    align-items: center; /* Centra verticalmente */
+    margin-bottom: 2rem;
+    padding: 0 10px;
+}
+
+/* 2. BOTÓN "NUEVO" ELEGANTE */
+.btn-sia-create {
+    background-color: var(--upds-blue);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(0, 53, 102, 0.2);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+.btn-sia-create:hover { background-color: #00284d; transform: translateY(-2px); color: white; }
+
+/* 3. BARRA DE FILTROS (Píldora Flotante) */
+.sia-filter-bar {
+    background: white;
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    gap: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+/* 4. TABLA PROFESIONAL */
+.sia-table-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    border: 1px solid #f1f5f9;
+    overflow: hidden; /* IMPORTANTE: Para bordes redondeados */
+}
+
+.table thead th {
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 15px 20px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.table tbody td {
+    padding: 15px 20px;
+    vertical-align: middle;
+    color: #334155;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #f8fafc;
+}
+
+/* 5. MENÚ DESPLEGABLE (FIXED) */
+.dropdown-toggle::after { display: none; } /* Ocultar flecha fea por defecto */
+
+.btn-options {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    color: #94a3b8;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-options:hover, .show > .btn-options {
+    background-color: #f1f5f9;
+    color: var(--upds-blue);
+    border-color: #e2e8f0;
+}
+
+/* El menú flotante bonito */
+.sia-dropdown-menu {
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    padding: 8px;
+    min-width: 200px;
+    margin-top: 5px;
+}
+
+.dropdown-item {
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dropdown-item:hover { background-color: #f0f9ff; color: var(--upds-blue); }
+.dropdown-item.text-danger:hover { background-color: #fef2f2; color: #dc2626; }
