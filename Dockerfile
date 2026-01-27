@@ -35,8 +35,13 @@ RUN composer install --no-dev --optimize-autoloader
 # Ajustar permisos para Laravel
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
+# --- NUEVO: Generar caché durante la construcción para que no bloquee el inicio ---
+# Nota: Esto requiere que tengas un .env temporal o que las variables no sean nulas
+RUN php artisan config:cache && php artisan route:cache
+
 # Puerto dinámico asignado por Railway
 EXPOSE 80
 
-# Comando para iniciar la aplicación
-CMD php artisan config:cache && php artisan route:cache && php artisan serve --host=0.0.0.0 --port=${PORT:-80}
+# --- NUEVO: Comando de inicio simplificado ---
+# Eliminamos los '&&' del inicio para que el servidor arranque de inmediato
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-80}
