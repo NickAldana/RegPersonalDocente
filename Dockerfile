@@ -1,17 +1,8 @@
-# Usamos la imagen oficial de PHP con FPM
 FROM php:8.2-cli
 
-# Instalar dependencias del sistema y herramientas de Microsoft para SQL Server
+# 1. Instalar dependencias del sistema y drivers de Microsoft
 RUN apt-get update && apt-get install -y \
-    gnupg2 \
-    curl \
-    apt-transport-https \
-    git \
-    unzip \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
+    gnupg2 curl apt-transport-https git unzip libpng-dev libonig-dev libxml2-dev zip \
     && mkdir -p /etc/apt/keyrings \
     && curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg \
     && echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" > /etc/apt/sources.list.d/mssql-release.list \
@@ -20,28 +11,31 @@ RUN apt-get update && apt-get install -y \
     && pecl install sqlsrv pdo_sqlsrv \
     && docker-php-ext-enable sqlsrv pdo_sqlsrv
 
-# Instalar Composer
+# 2. Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Configurar el directorio de trabajo
+# 3. Configurar directorio de trabajo
 WORKDIR /var/www
-
-# Copiar el proyecto al contenedor
 COPY . .
 
-# Instalar dependencias de PHP
-RUN composer install --no-dev --optimize-autoloader
+# 4. Instalar dependencias de PHP (Sin ejecutar scripts que requieran base de datos)
+RUN composer install --no-dev --no-scripts --optimize-autoloader
 
-# Ajustar permisos para Laravel
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+# 5. CREACIÓN DE CARPETAS CRÍTICAS (Esto evita el error de 0.15ms)
+# Laravel colapsa si estas carpetas no existen físicamente
+RUN mkdir -p storage/framework/sessions \
+             storage/framework/views \
+             storage/framework/cache \
+             storage/logs \
+             bootstrap/cache
 
-# --- NUEVO: Generar caché durante la construcción para que no bloquee el inicio ---
-# Nota: Esto requiere que tengas un .env temporal o que las variables no sean nulas
-RUN php artisan config:cache && php artisan route:cache
+# 6. AJUSTE DE PERMISOS DEFINITIVO
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-# Puerto dinámico asignado por Railway
+# 7. Exponer puerto (Railway usa el 80 por defecto)
 EXPOSE 80
 
-# --- NUEVO: Comando de inicio simplificado ---
-# Eliminamos los '&&' del inicio para que el servidor arranque de inmediato
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-80}
+# 8. COMANDO DE INICIO (Usa la variable $PORT de Railway)
+# Limpiamos caché al arrancar para asegurar que tome las variables de Railway y no las de tu PC
+CMD php artisan config:clear && php artisan serve --host=0.0.0.0 --port=${PORT:-80}
