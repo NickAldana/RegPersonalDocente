@@ -18,19 +18,7 @@
         </a>
     </div>
 
-    {{-- ALERTAS DE SISTEMA (Estilo V4.0) --}}
-    @if (session('success'))
-        <div class="alert bg-white border-start border-4 border-success shadow-sm rounded-3 mb-4 d-flex align-items-center p-3 animate__animated animate__fadeIn">
-            <div class="rounded-circle bg-success bg-opacity-10 text-success p-2 me-3">
-                <i class="bi bi-check-lg fs-4"></i>
-            </div>
-            <div>
-                <h6 class="fw-bold text-dark mb-0">Operación Exitosa</h6>
-                <small class="text-muted">{{ session('success') }}</small>
-            </div>
-        </div>
-    @endif
-
+    {{-- ALERTAS DE SISTEMA --}}
     @if ($errors->any())
         <div class="alert bg-white border-start border-4 border-danger shadow-sm rounded-3 mb-4 p-3 animate__animated animate__shakeX">
             <div class="d-flex align-items-center mb-2">
@@ -50,12 +38,11 @@
     {{-- FORMULARIO PRINCIPAL --}}
     <div class="row justify-content-center">
         <div class="col-xl-10">
-            <form action="{{ route('personal.store') }}" method="POST">
+            <form action="{{ route('personal.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 
                 <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
                     
-                    {{-- Card Header Institucional --}}
                     <div class="card-header bg-upds-blue text-white py-4 px-5 border-bottom border-white-10">
                         <div class="d-flex align-items-center">
                             <div class="bg-white/10 rounded-circle p-3 me-3 text-upds-gold">
@@ -89,17 +76,22 @@
                                         @endforeach
                                     </select>
                                 </div>
+
+                                {{-- AJUSTE: Solo se muestra el cargo de Docente --}}
                                 <div class="col-md-4">
                                     <label class="form-label sia-label">Cargo Designado <span class="text-danger">*</span></label>
-                                    <select name="IdCargo" class="form-select sia-input fw-bold" required>
-                                        <option value="" selected disabled>Definir Cargo...</option>
+                                    <select name="IdCargo" class="form-select sia-input fw-bold bg-white" required>
                                         @foreach($cargos as $cargo)
-                                            <option value="{{ $cargo->IdCargo }}" {{ old('IdCargo') == $cargo->IdCargo ? 'selected' : '' }}>
-                                                {{ $cargo->NombreCargo }}
-                                            </option>
+                                            @if(Str::contains(strtolower($cargo->NombreCargo), 'docente'))
+                                                <option value="{{ $cargo->IdCargo }}" selected>
+                                                    {{ $cargo->NombreCargo }}
+                                                </option>
+                                            @endif
                                         @endforeach
                                     </select>
+                                    <small class="text-muted mt-1 d-block" style="font-size: 0.65rem;"></small>
                                 </div>
+
                                 <div class="col-md-4">
                                     <label class="form-label sia-label">Modalidad Contrato <span class="text-danger">*</span></label>
                                     <select name="IdTipoContrato" class="form-select sia-input" required>
@@ -122,7 +114,6 @@
                             </h6>
 
                             <div class="row g-4">
-                                {{-- Fila 1: Nombres --}}
                                 <div class="col-md-4">
                                     <label class="form-label sia-label">Nombres <span class="text-danger">*</span></label>
                                     <input type="text" name="NombreCompleto" class="form-control sia-input" value="{{ old('NombreCompleto') }}" required placeholder="Ej: Juan Carlos">
@@ -136,7 +127,6 @@
                                     <input type="text" name="ApellidoMaterno" class="form-control sia-input" value="{{ old('ApellidoMaterno') }}" placeholder="Ej: Gómez">
                                 </div>
 
-                                {{-- Fila 2: Identificación y Contacto --}}
                                 <div class="col-md-4">
                                     <label class="form-label sia-label">Documento de Identidad <span class="text-danger">*</span></label>
                                     <div class="input-group">
@@ -158,8 +148,7 @@
                                     <input type="text" name="Telefono" class="form-control sia-input" value="{{ old('Telefono') }}" placeholder="Ej: 70012345">
                                 </div>
 
-                                {{-- Fila 3: Detalles --}}
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label sia-label mb-3">Género</label>
                                     <div class="d-flex gap-4 p-3 bg-gray-50 rounded-4 border border-dashed">
                                         <div class="form-check">
@@ -173,14 +162,14 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label sia-label">Experiencia Profesional</label>
                                     <select name="AniosExperiencia" class="form-select sia-input">
                                         <option value="" selected disabled>Seleccionar Rango...</option>
                                         <option value="1 - 4" {{ old('AniosExperiencia') == '1 - 4' ? 'selected' : '' }}>1 - 4 años</option>
                                         <option value="5 - 9" {{ old('AniosExperiencia') == '5 - 9' ? 'selected' : '' }}>5 - 9 años</option>
-                                        <option value="10 - 14" {{ old('AniosExperiencia') == '10 - 14' ? 'selected' : '' }}>10 - 14 </option>
-                                        <option value="15 - 19" {{ old('AniosExperiencia') == '15 - 19' ? 'selected' : '' }}>15 - 19</option>
+                                        <option value="10 - 14" {{ old('AniosExperiencia') == '10 - 14' ? 'selected' : '' }}>10 - 14 años</option>
+                                        <option value="15 - 19" {{ old('AniosExperiencia') == '15 - 19' ? 'selected' : '' }}>15 - 19 años</option>
                                         <option value="+20" {{ old('AniosExperiencia') == '+20' ? 'selected' : '' }}>+20 años</option>
                                     </select>
                                 </div>
@@ -195,27 +184,41 @@
                             </h6>
                             
                             <div class="row g-4">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label sia-label">Grado Académico <span class="text-danger">*</span></label>
                                     <select name="IdGradoAcademico" class="form-select sia-input" required>
-                                        <option value="" selected disabled>Nivel alcanzado...</option>
-                                        <option value="1" {{ old('IdGradoAcademico') == 1 ? 'selected' : '' }}>Licenciatura</option>
-                                        <option value="2" {{ old('IdGradoAcademico') == 2 ? 'selected' : '' }}>Diplomado</option>
-                                        <option value="3" {{ old('IdGradoAcademico') == 3 ? 'selected' : '' }}>Especialidad</option>
-                                        <option value="4" {{ old('IdGradoAcademico') == 4 ? 'selected' : '' }}>Maestría</option>
-                                        <option value="5" {{ old('IdGradoAcademico') == 5 ? 'selected' : '' }}>Doctorado</option>
+                                        <option value="" selected disabled>Nivel...</option>
+                                        @foreach($grados as $grado)
+                                            <option value="{{ $grado->IdGradoAcademico }}" {{ old('IdGradoAcademico') == $grado->IdGradoAcademico ? 'selected' : '' }}>
+                                                {{ $grado->NombreGrado }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 
-                                <div class="col-md-5">
+                                <div class="col-md-6">
                                     <label class="form-label sia-label">Título Profesional Obtenido <span class="text-danger">*</span></label>
-                                    <input type="text" name="TituloObtenido" class="form-control sia-input" placeholder="Ej: Lic. en Ingeniería de Sistemas" value="{{ old('TituloObtenido') }}" required>
+                                    <input type="text" name="TituloObtenido" list="listaCarreras" class="form-control sia-input" placeholder="Ej: Ingeniería de Sistemas" value="{{ old('TituloObtenido') }}" required autocomplete="off">
+                                    <datalist id="listaCarreras">
+                                        @foreach($carrerasTipicas as $ct)
+                                            <option value="{{ $ct }}">
+                                        @endforeach
+                                    </datalist>
                                 </div>
 
                                 <div class="col-md-3">
                                     <label class="form-label sia-label">Año de Graduación</label>
                                     <input type="number" name="AñoEstudios" class="form-control sia-input text-center fw-bold text-upds-blue" 
                                            min="1950" max="{{ date('Y') }}" value="{{ old('AñoEstudios', date('Y')) }}" required>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <label class="form-label sia-label">Respaldo Digital (Opcional)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-file-earmark-pdf-fill text-danger"></i></span>
+                                        <input type="file" name="ArchivoTitulo" class="form-control sia-input border-start-0" accept=".pdf">
+                                    </div>
+                                    <p class="text-[10px] text-muted mt-2 fw-bold uppercase"><i class="bi bi-info-circle me-1"></i> Puede dejar este campo vacío y regularizar el PDF más tarde desde el perfil.</p>
                                 </div>
                             </div>
                         </div>
@@ -225,7 +228,7 @@
                     {{-- FOOTER / ACCIONES --}}
                     <div class="card-footer bg-white p-4 border-top">
                         <div class="d-flex justify-content-end align-items-center gap-3">
-                            <a href="{{ route('personal.index') }}" class="btn text-secondary fw-bold text-uppercase text-xs hover-text-dark">Cancelar</a>
+                            <a href="{{ route('personal.index') }}" class="btn text-secondary fw-bold text-uppercase text-xs hover-text-dark">Cancelar Registro</a>
                             <button type="submit" class="btn btn-sia-primary shadow-lg">
                                 <i class="bi bi-save2-fill me-2"></i> Registrar Docente
                             </button>
@@ -239,7 +242,7 @@
 </div>
 
 <style>
-    /* SISTEMA DE DISEÑO V4.0 */
+    /* VARIABLES DE DISEÑO V4.0 */
     :root {
         --upds-blue: #003566;
         --upds-blue-dark: #001d3d;
@@ -248,17 +251,14 @@
         --gray-100: #f1f5f9;
     }
 
-    /* Colores */
     .text-upds-blue { color: var(--upds-blue) !important; }
     .text-upds-gold { color: var(--upds-gold) !important; }
     .bg-upds-blue { background-color: var(--upds-blue) !important; }
-    .bg-upds-gold { background-color: var(--upds-gold) !important; }
     .bg-gray-50 { background-color: var(--gray-50) !important; }
-    .bg-gray-100 { background-color: var(--gray-100) !important; }
-
-    /* Tipografía */
     .fw-black { font-weight: 900; }
     .text-xs { font-size: 0.75rem; }
+    .text-\[10px\] { font-size: 10px; }
+    
     .sia-label {
         font-size: 0.75rem;
         font-weight: 700;
@@ -268,7 +268,6 @@
         margin-bottom: 0.35rem;
     }
 
-    /* Inputs Técnicos */
     .sia-input {
         border: 2px solid #e2e8f0;
         border-radius: 0.75rem;
@@ -284,7 +283,6 @@
         background-color: white;
     }
 
-    /* Botón Principal */
     .btn-sia-primary {
         background-color: var(--upds-blue);
         color: white;
@@ -304,11 +302,8 @@
         color: white;
     }
 
-    /* Hover Utilities */
     .hover-scale:hover { transform: scale(1.05); }
     .hover-text-dark:hover { color: #0f172a !important; text-decoration: underline; }
-
-    /* Bordes Especiales */
     .rounded-start-4 { border-top-left-radius: 0.75rem !important; border-bottom-left-radius: 0.75rem !important; }
 </style>
 @endsection

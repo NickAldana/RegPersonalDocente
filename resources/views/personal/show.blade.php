@@ -21,7 +21,6 @@
                 </a>
             @endcan
             
-            {{-- Botón de Impresión --}}
             <a href="{{ route('personal.print', $docente->IdPersonal) }}" target="_blank" class="btn btn-sia-primary shadow-lg hover-scale">
                 <i class="bi bi-printer-fill me-2"></i> Imprimir Kardex
             </a>
@@ -35,7 +34,6 @@
             <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white h-100">
                 <div class="card-body p-0">
                     
-                    {{-- Bloque Foto y Estado --}}
                     <div class="bg-gradient-upds p-5 text-center position-relative">
                         <div class="position-relative d-inline-block mb-3">
                             @if($docente->FotoPerfil)
@@ -46,7 +44,6 @@
                                 </div>
                             @endif
                             
-                            {{-- Badge Estado --}}
                             <div class="position-absolute bottom-0 end-0 translate-middle-x">
                                 @if($docente->Activo)
                                     <span class="badge bg-green-500 border border-2 border-white text-white rounded-pill px-3 py-1 shadow-sm">ACTIVO</span>
@@ -62,11 +59,10 @@
                         </p>
                     </div>
 
-                    {{-- Datos de Contacto Rápidos --}}
                     <div class="p-4">
                         <div class="mb-4">
                             <label class="sia-label-mini">Credenciales de Acceso</label>
-                            @if($docente->usuario)
+                            @if($docente->usuario && $docente->usuario->Activo)
                                 <div class="d-flex align-items-center text-success fw-bold bg-green-50 p-2 rounded-3 border border-green-100">
                                     <i class="bi bi-shield-lock-fill me-2 fs-5"></i> Habilitado
                                 </div>
@@ -99,7 +95,6 @@
         {{-- COLUMNA DERECHA: DETALLES Y PESTAÑAS --}}
         <div class="col-lg-8 col-xl-9">
             
-            {{-- 1. Tarjeta de Vinculación --}}
             <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
                 <div class="card-body p-4">
                     <h6 class="sia-section-title mb-4">
@@ -128,7 +123,7 @@
                                             <span class="badge bg-white text-upds-blue border shadow-sm px-3 py-2 fw-bold">
                                                 {{ $carrera->NombreCarrera }}
                                                 <small class="d-block text-muted fw-normal mt-1" style="font-size: 0.65rem;">
-                                                    {{ $carrera->facultad->NombreFacultad ?? '' }}
+                                                    {{ $carrera->facultad->NombreFacultad ?? 'UPDS' }}
                                                 </small>
                                             </span>
                                         @endforeach
@@ -142,7 +137,7 @@
                 </div>
             </div>
 
-            {{-- 2. Pestañas de Historial --}}
+            {{-- PESTAÑAS DE HISTORIAL --}}
             <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
                 <div class="card-header bg-white border-bottom p-0">
                     <ul class="nav nav-tabs sia-tabs" id="profileTabs" role="tablist">
@@ -156,11 +151,6 @@
                                 <i class="bi bi-calendar-week-fill me-2"></i> Carga Horaria
                             </button>
                         </li>
-                        <li class="nav-item">
-                            <button class="nav-link" id="pubs-tab" data-bs-toggle="tab" data-bs-target="#pubs" type="button">
-                                <i class="bi bi-book-half me-2"></i> Producción
-                            </button>
-                        </li>
                     </ul>
                 </div>
 
@@ -171,37 +161,46 @@
                         <div class="tab-pane fade show active" id="formacion">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h6 class="fw-bold text-dark mb-0">Grados Académicos Registrados</h6>
-                                @if(Auth::user()->can('gestionar_personal') || Auth::user()->IdPersonal == $docente->IdPersonal)
+                                @if(Auth::user()->can('gestionar_personal') || Auth::id() == $docente->IdPersonal)
                                     <button class="btn btn-sm btn-sia-ghost" data-bs-toggle="modal" data-bs-target="#modalFormacion">
-                                        <i class="bi bi-plus-circle-fill me-1"></i> Agregar
+                                        <i class="bi bi-plus-circle-fill me-1"></i> Agregar Título
                                     </button>
                                 @endif
                             </div>
 
                             <div class="list-group shadow-sm rounded-3 overflow-hidden border-0">
                                 @forelse($docente->formaciones as $formacion)
-                                    <div class="list-group-item p-3 border-start border-4 border-start-upds-gold">
+                                    <div class="list-group-item p-3 border-start border-4 border-start-upds-gold bg-white mb-2 rounded-3">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
                                                 <h6 class="fw-bold text-upds-blue mb-1">{{ $formacion->TituloObtenido }}</h6>
                                                 <div class="small text-muted mb-1">
-                                                    <i class="bi bi-bank2 me-1"></i> {{ $formacion->centroFormacion->NombreCentro ?? 'Institución externa' }}
+                                                    <i class="bi bi-bank2 me-1"></i> {{ $formacion->centroFormacion->NombreCentro ?? 'Institución' }}
                                                 </div>
-                                                <span class="badge bg-gray-200 text-dark border">{{ $formacion->gradoAcademico->NombreGrado ?? 'Grado' }}</span>
+                                                <span class="badge bg-gray-100 text-dark border">{{ $formacion->gradoAcademico->NombreGrado ?? 'Grado' }}</span>
                                             </div>
                                             <div class="text-end">
                                                 <div class="fw-bold text-dark fs-5">{{ $formacion->AñoEstudios }}</div>
+                                                
+                                                {{-- Lógica de Respaldo PDF con Data Attributes --}}
                                                 @if($formacion->RutaArchivo)
-                                                    <a href="{{ Storage::url($formacion->RutaArchivo) }}" target="_blank" class="btn btn-xs text-danger hover-bg-red-50 mt-1">
-                                                        <i class="bi bi-file-pdf-fill"></i> Ver
+                                                    <a href="{{ asset('storage/' . $formacion->RutaArchivo) }}" target="_blank" class="btn btn-xs text-danger hover-bg-red-50 mt-1 fw-bold">
+                                                        <i class="bi bi-file-pdf-fill me-1"></i> Ver PDF
                                                     </a>
+                                                @else
+                                                    <button type="button" class="btn btn-xs text-warning hover-bg-orange-50 mt-1 fw-bold shadow-none" 
+                                                            data-id="{{ $formacion->IdFormacion }}" 
+                                                            data-titulo="{{ $formacion->TituloObtenido }}"
+                                                            onclick="abrirModalPDF(this)">
+                                                        <i class="bi bi-cloud-arrow-up-fill me-1"></i> Subir Respaldo
+                                                    </button>
                                                 @endif
                                             </div>
                                         </div>
                                     </div>
                                 @empty
-                                    <div class="text-center py-4 text-muted bg-white">
-                                        <i class="bi bi-inbox fs-4 d-block mb-2 opacity-50"></i>
+                                    <div class="text-center py-5 text-muted bg-white rounded-3">
+                                        <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
                                         Sin registros académicos.
                                     </div>
                                 @endforelse
@@ -210,11 +209,11 @@
 
                         {{-- TAB: CARGA HORARIA --}}
                         <div class="tab-pane fade" id="carga">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
+                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h6 class="fw-bold text-dark mb-0">Historial de Materias</h6>
                                 @can('asignar_carga')
                                     <a href="{{ route('carga.create', ['docente_id' => $docente->IdPersonal]) }}" class="btn btn-sm btn-sia-ghost">
-                                        <i class="bi bi-arrow-right-circle-fill me-1"></i> Gestionar
+                                        <i class="bi bi-arrow-right-circle-fill me-1"></i> Gestionar Carga
                                     </a>
                                 @endcan
                             </div>
@@ -237,35 +236,11 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="3" class="text-center py-4 text-muted">No hay carga asignada.</td>
+                                                <td colspan="3" class="text-center py-4 text-muted">Sin carga asignada.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>
                                 </table>
-                            </div>
-                        </div>
-
-                        {{-- TAB: PUBLICACIONES --}}
-                        <div class="tab-pane fade" id="pubs">
-                            <h6 class="fw-bold text-dark mb-3">Investigación y Publicaciones</h6>
-                            <div class="row g-3">
-                                @forelse($docente->publicaciones as $pub)
-                                    <div class="col-md-6">
-                                        <div class="card h-100 border-0 shadow-sm bg-white border-start border-4 border-start-primary">
-                                            <div class="card-body">
-                                                <h6 class="fw-bold text-dark mb-2">{{ $pub->NombrePublicacion }}</h6>
-                                                <div class="d-flex justify-content-between align-items-center text-muted small">
-                                                    <span><i class="bi bi-tag-fill me-1"></i> {{ $pub->tipoPublicacion->NombreTipo ?? 'Publicación' }}</span>
-                                                    <span><i class="bi bi-calendar3 me-1"></i> {{ $pub->FechaPublicacion ? \Carbon\Carbon::parse($pub->FechaPublicacion)->format('Y') : '' }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <div class="col-12 text-center py-4 text-muted bg-white rounded-3 border border-dashed">
-                                        No se encontraron publicaciones.
-                                    </div>
-                                @endforelse
                             </div>
                         </div>
 
@@ -277,7 +252,7 @@
     </div>
 </div>
 
-{{-- MODAL AGREGAR TÍTULO (Estilo V4.0) --}}
+{{-- MODAL 1: AGREGAR NUEVO TÍTULO --}}
 <div class="modal fade" id="modalFormacion" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-xl rounded-4">
@@ -322,12 +297,54 @@
                 </div>
                 <div class="modal-footer bg-white border-top px-4 py-3">
                     <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-sia-primary rounded-pill px-4">Guardar</button>
+                    <button type="submit" class="btn btn-sia-primary rounded-pill px-4 shadow-sm">Guardar Título</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+{{-- MODAL 2: SUBIDA RÁPIDA DE PDF (AJUSTADO) --}}
+<div class="modal fade" id="modalSubirPDF" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-2xl rounded-4">
+            <div class="modal-header bg-warning text-dark px-4 py-3 border-0">
+                <h6 class="modal-title fw-bold text-uppercase small"><i class="bi bi-file-earmark-pdf-fill me-2"></i> Adjuntar Respaldo</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('formacion.updatePDF') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="IdFormacion" id="form_pdf_id">
+                <div class="modal-body p-4 bg-gray-50 text-center">
+                    <p class="small text-muted mb-3 fw-medium" id="form_pdf_titulo"></p>
+                    <div class="p-3 bg-white border border-dashed rounded-4">
+                        <input type="file" name="ArchivoTitulo" class="form-control form-control-sm sia-input shadow-none" accept=".pdf" required>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-0 px-4 pb-4">
+                    <button type="submit" class="btn btn-sia-primary w-100 shadow-sm">Actualizar Documento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- SCRIPTS --}}
+<script>
+    function abrirModalPDF(btn) {
+        // Extraemos los datos del botón usando Data Attributes
+        const id = btn.getAttribute('data-id');
+        const titulo = btn.getAttribute('data-titulo');
+
+        // Llenamos el formulario del modal
+        document.getElementById('form_pdf_id').value = id;
+        document.getElementById('form_pdf_titulo').innerText = "Cargando respaldo para: " + titulo;
+
+        // Disparamos el modal de Bootstrap
+        var myModal = new bootstrap.Modal(document.getElementById('modalSubirPDF'));
+        myModal.show();
+    }
+</script>
 
 <style>
     /* VARIABLES Y ESTILOS V4.0 */
@@ -336,61 +353,31 @@
         --upds-blue-dark: #001d3d;
         --upds-gold: #ffc300;
         --gray-50: #f8fafc;
-        --gray-100: #f1f5f9;
-        --gray-200: #e2e8f0;
-        --blue-50: #eff6ff;
-        --blue-100: #dbeafe;
     }
 
-    /* Colores y Fondos */
     .text-upds-blue { color: var(--upds-blue) !important; }
     .text-upds-gold { color: var(--upds-gold) !important; }
-    .bg-gray-50 { background-color: var(--gray-50) !important; }
-    .bg-blue-50 { background-color: var(--blue-50) !important; }
-    .border-blue-100 { border-color: var(--blue-100) !important; }
     .bg-gradient-upds { background: linear-gradient(135deg, var(--upds-blue) 0%, var(--upds-blue-dark) 100%); }
     
-    .bg-green-500 { background-color: #22c55e; }
-    .bg-red-500 { background-color: #ef4444; }
-    .bg-green-50 { background-color: #f0fdf4; }
-    .border-green-100 { border-color: #dcfce7; }
-
-    /* Bordes */
-    .border-start-upds-gold { border-left-color: var(--upds-gold) !important; }
-
-    /* Tipografía */
-    .fw-black { font-weight: 900; }
-    .sia-label-mini { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 0.25rem; letter-spacing: 0.05em; }
-    
-    .sia-section-title {
-        font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--upds-blue);
-        border-bottom: 2px solid var(--gray-100); padding-bottom: 0.75rem;
-    }
+    .sia-label-mini { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 0.25rem; }
+    .sia-section-title { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; color: var(--upds-blue); border-bottom: 2px solid #f1f5f9; padding-bottom: 0.75rem; }
     .sia-section-title .icon { color: var(--upds-gold); margin-right: 0.5rem; }
 
-    /* Componentes */
-    .sia-info-box { background: var(--gray-50); padding: 1rem; border-radius: 0.75rem; border: 1px solid var(--gray-200); height: 100%; }
-    .sia-info-box label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 0.25rem; }
+    .sia-info-box { background: var(--gray-50); padding: 1rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; height: 100%; }
+    .sia-info-box label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; display: block; }
     .sia-info-box p { font-size: 1rem; font-weight: 600; color: #1e293b; margin-bottom: 0; }
 
-    .sia-input { border: 1px solid var(--gray-200); border-radius: 0.5rem; font-size: 0.9rem; padding: 0.6rem 1rem; }
-    .sia-input:focus { border-color: var(--upds-blue); box-shadow: 0 0 0 3px rgba(0, 53, 102, 0.1); }
+    .sia-tabs .nav-link { color: #64748b; font-weight: 600; padding: 1rem 1.5rem; border: none; border-bottom: 3px solid transparent; }
+    .sia-tabs .nav-link.active { color: var(--upds-blue); border-bottom-color: var(--upds-gold); background: transparent; }
 
-    /* Tabs Personalizados */
-    .sia-tabs .nav-link {
-        color: #64748b; font-weight: 600; font-size: 0.9rem; padding: 1rem 1.5rem; border: none; border-bottom: 3px solid transparent; transition: all 0.2s;
-    }
-    .sia-tabs .nav-link:hover { color: var(--upds-blue); background-color: var(--gray-50); }
-    .sia-tabs .nav-link.active { color: var(--upds-blue); border-bottom-color: var(--upds-gold); background-color: transparent; }
-
-    /* Botones */
-    .btn-sia-primary { background-color: var(--upds-blue); color: white; font-weight: 700; border-radius: 50px; padding: 0.6rem 1.5rem; border: none; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.3s; }
-    .btn-sia-primary:hover { background-color: var(--upds-blue-dark); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); color: white; }
+    .btn-sia-primary { background-color: var(--upds-blue); color: white; font-weight: 700; border-radius: 50px; border: none; padding: 0.6rem 1.5rem; transition: all 0.3s; }
+    .btn-sia-primary:hover { background-color: var(--upds-blue-dark); transform: translateY(-2px); color: white; }
+    .btn-sia-ghost { background: white; border: 1px solid #e2e8f0; color: var(--upds-blue); font-weight: 600; border-radius: 50px; padding: 0.4rem 1rem; font-size: 0.8rem; }
     
-    .btn-sia-ghost { background-color: white; border: 1px solid var(--gray-200); color: var(--upds-blue); font-weight: 600; border-radius: 50px; padding: 0.4rem 1rem; font-size: 0.8rem; transition: all 0.2s; }
-    .btn-sia-ghost:hover { border-color: var(--upds-blue); background-color: var(--blue-50); }
-
-    .hover-scale:hover { transform: scale(1.05); transition: transform 0.2s; }
+    .btn-xs { font-size: 0.7rem; padding: 0.25rem 0.5rem; border-radius: 4px; border: none; background: transparent; }
+    .hover-bg-red-50:hover { background-color: #fef2f2; }
+    .hover-bg-orange-50:hover { background-color: #fff7ed; }
     .object-cover { object-fit: cover; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
 </style>
 @endsection

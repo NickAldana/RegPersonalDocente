@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Personal;
-use App\Models\Carrera;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
@@ -14,52 +14,55 @@ class DashboardController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        
-        // Año de gestión del proyecto SIA
         $gestionActual = 2026;
 
-        // 1. LÓGICA PARA ADMINISTRADORES (Rector, Vicerrector, Jefes)
+        // 1. LÓGICA PARA ADMINISTRADORES / GESTORES (Dirección de Acreditación)
         if ($user->canDo('gestionar_personal')) {
             
-            $query = Personal::query();
+            $cacheKey = $user->canDo('acceso_total') 
+                ? 'dashboard_stats_global' 
+                : 'dashboard_stats_user_' . $user->id;
 
-            // --- FILTRO DE SEGURIDAD (Visión de Túnel) ---
-            // Si no es Super Admin (acceso_total), filtramos por sus carreras asignadas
-            if (!$user->canDo('acceso_total')) {
-                $misCarrerasIds = $user->personal->carreras->pluck('IdCarrera')->toArray();
-                
-                $query->whereHas('carreras', function($q) use ($misCarrerasIds) {
-                    $q->whereIn('Carrera.IdCarrera', $misCarrerasIds);
-                });
-            }
+            // Caché de 60 segundos para equilibrio entre velocidad y tiempo real
+            $stats = Cache::remember($cacheKey, 60, function () use ($user, $gestionActual) {
+                $query = Personal::query();
 
-            // Estadísticas filtradas
-            $totalDocentes = $query->count();
-            $activos = (clone $query)->where('Activo', 1)->count();
-            $inactivos = (clone $query)->where('Activo', 0)->count();
+                // SEGURIDAD: Los contadores de personas siguen filtrados por área
+                if (!$user->canDo('acceso_total')) {
+                    $misCarrerasIds = $user->personal->carreras->pluck('IdCarrera')->toArray();
+                    $query->whereHas('carreras', fn($q) => $q->whereIn('Carrera.IdCarrera', $misCarrerasIds));
+                }
 
-            // Resumen de Carga (Materias asignadas en la gestión 2026)
-            $materiasAsignadas = DB::table('PersonalMateria')
-                                    ->where('Gestion', $gestionActual)
-                                    ->count();
+                $baseQuery = clone $query;
 
-            // Gráfico: Docentes por Tipo de Contrato
-            $porContrato = Personal::select('IdTipoContrato', DB::raw('count(*) as total'))
-                            ->groupBy('IdTipoContrato')
-                            ->with('contrato')
-                            ->get();
+           return [
+    'totalDocentes'     => $baseQuery->count(),
+    'activos'           => (clone $baseQuery)->where('Activo', 1)->count(),
+    'inactivos'         => (clone $baseQuery)->where('Activo', 0)->count(),
+    
+    'pendientesPDF'     => (clone $baseQuery)->whereDoesntHave('formaciones', fn($q) => 
+                            $q->whereNotNull('RutaArchivo')
+                           )->count(),
 
-            return view('dashboard', compact(
-                'totalDocentes', 
-                'activos', 
-                'inactivos', 
-                'porContrato', 
-                'materiasAsignadas'
-            ));
+    // CAMBIO AQUÍ: Ahora contamos todas las materias del sistema, no solo las asignadas
+    'materiasAsignadas' => \App\Models\Materia::count(), 
+
+    'porContrato'       => (clone $baseQuery)
+        ->select('IdTipoContrato', DB::raw('count(*) as total'))
+        ->groupBy('IdTipoContrato')
+        ->with('contrato:IdTipoContrato,NombreContrato')
+        ->get()
+];            });
+
+            return view('dashboard', $stats);
         }
 
-        // 2. LÓGICA PARA DOCENTES (Vista simplificada)
-        // Solo enviamos los datos básicos para que no de error la vista
-        return view('dashboard');
+        // 2. LÓGICA PARA DOCENTES
+        $miCarga = $user->personal ? $user->personal->materias()->where('Gestion', $gestionActual)->count() : 0;
+        
+        return view('dashboard', [
+            'misMaterias' => $miCarga,
+            'isDocente'   => true
+        ]);
     }
 }

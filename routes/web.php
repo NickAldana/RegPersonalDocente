@@ -68,15 +68,13 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/personal/crear', 'create')->name('personal.create'); 
             Route::post('/personal', 'store')->name('personal.store');
             
-            // Acciones de Estado y Cuentas (Nombres ajustados para las vistas)
+            // Acciones de Estado y Cuentas
             Route::post('/personal/{id}/toggle', 'toggleStatus')->name('personal.toggle');
             Route::post('/personal/{id}/crear-usuario', 'createUser')->name('personal.create_user');
             Route::post('/personal/{id}/revocar-usuario', 'revokeUser')->name('personal.revoke');
     });
 
     // --- VISTAS PÚBLICAS DE PERSONAL (Solo Lectura / Kardex) ---
-    // Estas rutas están fuera del middleware 'gestionar_personal' para que el 
-    // propio docente pueda ver su información.
     Route::get('/personal/{id}', [PersonalController::class, 'show'])->name('personal.show');
     Route::get('/personal/{id}/imprimir', [PersonalController::class, 'printInformacion'])->name('personal.print');
 
@@ -92,27 +90,31 @@ Route::middleware(['auth'])->group(function () {
 
     // --- FORMACIÓN DOCENTE (Registro de Títulos) ---
     Route::post('/formacion', [FormacionController::class, 'store'])->name('formacion.store');
-
-
+    
+// AÑADIR ESTA LÍNEA AQUÍ:
+Route::post('/formacion/actualizar-pdf', [FormacionController::class, 'updatePDF'])->name('formacion.updatePDF');
     // =========================================================================
-    // 4. ANALÍTICA Y REPORTES (Power BI & Documentación Institucional)
+    // 4. ANALÍTICA Y REPORTES (Sincronizado con Carpeta analitica/)
     // =========================================================================
     Route::middleware('can:ver_dashboard')->group(function () {
         
-        // Dashboards con Power BI Embebido
-        Route::view('/analitica/acreditacion', 'reporte-bi')->name('analitica.acreditacion');
-        Route::view('/analitica/corporativo', 'powerbi')->name('analitica.powerbi_show');
+        // 1. Analítico de Docentes
+        Route::view('/analitica/acreditacion', 'analitica.acreditacion')->name('analitica.acreditacion');
 
-        // Visores de PDF (Reportes Estáticos)
-        Route::get('/analitica/presentacion-final', function () {
-            return view('reporte', [
-                'archivo' => 'reporte_presentacion.pdf', 
-                'titulo' => 'Presentación de Acreditación'
+        // 2. Visor de PDF Dinámico
+        // Agregamos ->where('archivo', '.*') para que acepte el punto del ".pdf"
+        Route::get('/analitica/reporte/{archivo}', function ($archivo) {
+            $titulo = str_replace(['_', '.pdf'], [' ', ''], $archivo);
+            
+            return view('analitica.visor-pdf', [
+                'archivo' => $archivo,
+                'titulo' => ucwords($titulo)
             ]);
-        })->name('reporte.pdf');
+        })->name('reporte.pdf')->where('archivo', '.*');
 
+        // 3. Ruta directa para Inversión Profesional
         Route::get('/analitica/inversion-profesional', function () {
-            return view('reporte', [
+            return view('analitica.visor-pdf', [
                 'archivo' => 'Infografía de datos Oportunidades de Inversión Profesional Corporativo Azul (1).pdf', 
                 'titulo' => 'Inversión Profesional'
             ]);

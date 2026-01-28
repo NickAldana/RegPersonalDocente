@@ -20,7 +20,7 @@
 
     <div class="row g-4">
         
-        {{-- COLUMNA 1: SELECTOR DE MATERIAS (PANEL LATERAL) --}}
+        {{-- COLUMNA 1: SELECTOR DE MATERIAS (PANEL LATERAL OPTIMIZADO) --}}
         <div class="col-lg-4 col-xl-3">
             <div class="card sia-panel border-0 shadow-lg h-100 overflow-hidden">
                 <div class="card-header bg-white border-bottom p-4">
@@ -31,42 +31,23 @@
                     {{-- BUSCADOR MATERIAS --}}
                     <div class="position-relative">
                         <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-upds-blue opacity-50"></i>
-                        <input type="text" id="buscadorMateria" class="form-control sia-input-search ps-5" placeholder="Filtrar materia...">
+                        <input type="text" id="buscadorMateria" class="form-control sia-input-search ps-5" placeholder="Filtrar materia..." autocomplete="off">
+                    </div>
+                    <div class="mt-2 text-end">
+                        <small id="contadorMaterias" class="text-muted text-xs fw-bold">Cargando catálogo...</small>
                     </div>
                 </div>
 
                 <div class="card-body p-0 bg-light">
+                    {{-- FORMULARIO OCULTO PARA EL SUBMIT --}}
                     <form action="{{ route('carga.create') }}" method="GET" id="formMateriaSelector" class="h-100">
                         @if(request('docente_id'))
                             <input type="hidden" name="docente_id" value="{{ request('docente_id') }}">
                         @endif
-
-                        <div class="custom-scrollbar h-100 p-2" style="max-height: 600px; overflow-y: auto;">
-                            @foreach($materias as $materia)
-                                <label class="sia-list-item d-flex align-items-center p-3 mb-2 rounded-3 cursor-pointer item-materia {{ (isset($materia_id) && $materia_id == $materia->IdMateria) ? 'active' : '' }}">
-                                    
-                                    <input type="radio" name="IdMateria" value="{{ $materia->IdMateria }}" 
-                                           class="d-none" 
-                                           onchange="this.form.submit()"
-                                           {{ (isset($materia_id) && $materia_id == $materia->IdMateria) ? 'checked' : '' }}>
-                                    
-                                    {{-- Indicador Visual --}}
-                                    <div class="sia-indicator me-3"></div>
-
-                                    <div class="flex-grow-1">
-                                        <div class="fw-bold text-dark item-title lh-sm">{{ $materia->NombreMateria }}</div>
-                                        @if($materia->Sigla)
-                                            <div class="text-muted item-subtitle mt-1">
-                                                <i class="bi bi-hash me-1"></i>{{ $materia->Sigla }}
-                                            </div>
-                                        @endif
-                                    </div>
-
-                                    @if(isset($materia_id) && $materia_id == $materia->IdMateria)
-                                        <i class="bi bi-check-circle-fill text-upds-gold fs-5 ms-2 animate__animated animate__zoomIn"></i>
-                                    @endif
-                                </label>
-                            @endforeach
+                        
+                        {{-- CONTENEDOR DE LA LISTA (Se llena con JS) --}}
+                        <div class="custom-scrollbar h-100 p-2" style="max-height: 600px; overflow-y: auto;" id="contenedorMaterias">
+                            {{-- Aquí JavaScript inyectará las tarjetas --}}
                         </div>
                     </form>
                 </div>
@@ -77,7 +58,8 @@
         <div class="col-lg-8 col-xl-9">
             <form action="{{ route('carga.store') }}" method="POST">
                 @csrf
-                <input type="hidden" name="IdMateria" value="{{ $materia_id }}">
+                {{-- Input oculto que recibe el ID seleccionado desde el JS --}}
+                <input type="hidden" name="IdMateria" id="inputMateriaId" value="{{ $materia_id }}">
 
                 {{-- PANEL SUPERIOR: CONFIGURACIÓN --}}
                 <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
@@ -94,7 +76,7 @@
                         <div class="row g-4">
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold text-muted text-uppercase">Gestión</label>
-                                <input type="number" name="Gestion" class="form-control sia-input fw-black text-upds-blue fs-5" value="{{ date('Y') }}" readonly>
+                                <input type="number" name="Gestion" class="form-control sia-input fw-black text-upds-blue fs-5" value="2026" readonly>
                             </div>
                             <div class="col-md-8">
                                 <label class="form-label small fw-bold text-muted text-uppercase">Periodo Académico</label>
@@ -134,7 +116,7 @@
                             </div>
                         </div>
                         
-                        {{-- Buscador Docente Integrado en Header --}}
+                        {{-- Buscador Docente --}}
                         <div class="w-50">
                             <div class="position-relative">
                                 <input type="text" id="buscadorDocente" class="form-control border-0 rounded-pill bg-white bg-opacity-10 text-white placeholder-white-50 ps-4 pe-4" placeholder="Buscar por nombre o apellido...">
@@ -172,13 +154,13 @@
                                                    {{ (request('docente_id') == $docente->IdPersonal) ? 'checked' : '' }}
                                                    required>
                                             
-                                            {{-- Estado de Selección (Borde de color) --}}
+                                            {{-- Estado de Selección --}}
                                             <div class="selection-border"></div>
 
                                             {{-- Avatar --}}
                                             <div class="me-3 position-relative z-1">
                                                 @if($docente->FotoPerfil)
-                                                    <img src="{{ asset('storage/'.$docente->FotoPerfil) }}" class="rounded-circle border border-2 border-gray-100 shadow-sm" width="56" height="56" style="object-fit: cover;">
+                                                    <img src="{{ asset('storage/'.$docente->FotoPerfil) }}" class="rounded-circle border border-2 border-gray-100 shadow-sm" width="56" height="56" style="object-fit: cover;" loading="lazy">
                                                 @else
                                                     <div class="rounded-circle bg-gray-100 text-upds-blue d-flex align-items-center justify-content-center fw-bold border border-2 border-gray-200" style="width: 56px; height: 56px; font-size: 1.2rem;">
                                                         {{ substr($docente->NombreCompleto, 0, 1) }}
@@ -198,11 +180,6 @@
                                                     <span class="badge bg-blue-50 text-upds-blue border border-blue-100 fw-bold px-2 py-1" style="font-size: 0.65rem;">
                                                         {{ $docente->cargo->NombreCargo ?? 'EXTERNO' }}
                                                     </span>
-                                                    @if($docente->contrato)
-                                                        <span class="text-xs text-muted border-start ps-2 lh-1">
-                                                            {{ $docente->contrato->NombreContrato }}
-                                                        </span>
-                                                    @endif
                                                 </div>
                                             </div>
 
@@ -220,9 +197,11 @@
                     <div class="card-footer bg-white p-4 border-top">
                         <div class="d-flex justify-content-end align-items-center">
                             @if($materia_id)
-                            <div class="text-muted small me-4 d-none d-md-block">
-                                <i class="bi bi-info-circle me-1"></i> Verifique los datos antes de asignar.
-                            </div>
+                                {{-- Buscamos el nombre de la materia seleccionada en JS o PHP para mostrarlo --}}
+                                @php $matSel = $materias->firstWhere('IdMateria', $materia_id); @endphp
+                                <div class="text-muted small me-4 d-none d-md-block">
+                                    <i class="bi bi-info-circle me-1"></i> Asignando a: <strong>{{ $matSel ? $matSel->NombreMateria : '...' }}</strong>
+                                </div>
                             @endif
                             <button type="submit" class="btn btn-sia-assign shadow-lg" {{ !$materia_id ? 'disabled' : '' }}>
                                 <span class="d-flex align-items-center">
@@ -239,120 +218,35 @@
 </div>
 
 {{-- ESTILOS V4.0 ESPECÍFICOS --}}
+{{-- ESTILOS V4.0 ESPECÍFICOS --}}
 <style>
-    /* Variables de Identidad */
-    :root {
-        --upds-blue: #003566;
-        --upds-gold: #ffc300;
-        --upds-gray-light: #f8fafc;
-    }
-
+    /* ... (Mantén tus estilos CSS igual que antes, no hace falta cambiarlos) ... */
+    :root { --upds-blue: #003566; --upds-gold: #ffc300; --upds-gray-light: #f8fafc; }
     .text-upds-blue { color: var(--upds-blue) !important; }
     .text-upds-gold { color: var(--upds-gold) !important; }
     .bg-upds-blue { background-color: var(--upds-blue) !important; }
     .bg-blue-50 { background-color: #eff6ff !important; }
     .bg-gray-50 { background-color: #f9fafb !important; }
     .border-blue-100 { border-color: #dbeafe !important; }
-
-    /* Inputs Técnicos */
-    .sia-input {
-        background-color: #f1f5f9;
-        border: 2px solid transparent;
-        border-radius: 0.75rem;
-        transition: all 0.2s;
-    }
-    .sia-input:focus {
-        background-color: white;
-        border-color: var(--upds-blue);
-        box-shadow: 0 0 0 4px rgba(0, 53, 102, 0.1);
-    }
-
-    .sia-input-search {
-        border-radius: 50px;
-        background-color: #f8fafc;
-        border: 1px solid #e2e8f0;
-    }
-
-    /* Lista de Materias (Panel Izquierdo) */
-    .sia-list-item {
-        transition: all 0.2s ease;
-        border: 1px solid transparent;
-    }
-    .sia-list-item:hover {
-        background-color: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        border-color: #e2e8f0;
-    }
-    .sia-list-item.active {
-        background-color: var(--upds-blue);
-        color: white !important;
-        box-shadow: 0 4px 12px rgba(0, 53, 102, 0.25);
-    }
+    .sia-input { background-color: #f1f5f9; border: 2px solid transparent; border-radius: 0.75rem; transition: all 0.2s; }
+    .sia-input:focus { background-color: white; border-color: var(--upds-blue); box-shadow: 0 0 0 4px rgba(0, 53, 102, 0.1); }
+    .sia-input-search { border-radius: 50px; background-color: #f8fafc; border: 1px solid #e2e8f0; }
+    .sia-list-item { transition: all 0.2s ease; border: 1px solid transparent; }
+    .sia-list-item:hover { background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-color: #e2e8f0; }
+    .sia-list-item.active { background-color: var(--upds-blue); color: white !important; box-shadow: 0 4px 12px rgba(0, 53, 102, 0.25); }
     .sia-list-item.active .text-dark { color: white !important; }
     .sia-list-item.active .text-muted { color: rgba(255,255,255,0.7) !important; }
-    
-    .sia-indicator {
-        width: 8px; height: 8px;
-        border-radius: 50%;
-        background-color: #cbd5e1;
-    }
-    .sia-list-item.active .sia-indicator {
-        background-color: var(--upds-gold);
-        box-shadow: 0 0 0 2px rgba(255, 195, 0, 0.5);
-    }
-
-    /* Tarjetas de Docentes (Grid) */
-    .sia-docente-card {
-        border-color: #f1f5f9;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .sia-docente-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-        border-color: #e2e8f0;
-    }
-    
+    .sia-indicator { width: 8px; height: 8px; border-radius: 50%; background-color: #cbd5e1; }
+    .sia-list-item.active .sia-indicator { background-color: var(--upds-gold); box-shadow: 0 0 0 2px rgba(255, 195, 0, 0.5); }
+    .sia-docente-card { border-color: #f1f5f9; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+    .sia-docente-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); border-color: #e2e8f0; }
     .sia-radio-hidden { display: none; }
-    
-    /* Estado Seleccionado Docente */
-    .sia-radio-hidden:checked + .selection-border {
-        position: absolute;
-        inset: 0;
-        border: 2px solid var(--upds-blue);
-        border-radius: 1rem;
-        background-color: rgba(0, 53, 102, 0.02);
-    }
-    
-    .sia-radio-hidden:checked ~ .check-icon {
-        opacity: 1 !important;
-        transform: translate(-50%, -50%) scale(1.1);
-    }
-    .sia-radio-hidden:checked ~ div .docente-nombre {
-        color: var(--upds-blue) !important;
-    }
-
-    /* Botón Acción */
-    .btn-sia-assign {
-        background-color: var(--upds-gold);
-        color: var(--upds-blue);
-        font-weight: 900;
-        padding: 0.75rem 2.5rem;
-        border-radius: 50px;
-        border: none;
-        transition: all 0.3s;
-    }
-    .btn-sia-assign:hover:not(:disabled) {
-        background-color: #ffb700;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(255, 195, 0, 0.3) !important;
-    }
-    .btn-sia-assign:disabled {
-        background-color: #e2e8f0;
-        color: #94a3b8;
-        cursor: not-allowed;
-    }
-
-    /* Utilidades */
+    .sia-radio-hidden:checked + .selection-border { position: absolute; inset: 0; border: 2px solid var(--upds-blue); border-radius: 1rem; background-color: rgba(0, 53, 102, 0.02); }
+    .sia-radio-hidden:checked ~ .check-icon { opacity: 1 !important; transform: translate(-50%, -50%) scale(1.1); }
+    .sia-radio-hidden:checked ~ div .docente-nombre { color: var(--upds-blue) !important; }
+    .btn-sia-assign { background-color: var(--upds-gold); color: var(--upds-blue); font-weight: 900; padding: 0.75rem 2.5rem; border-radius: 50px; border: none; transition: all 0.3s; }
+    .btn-sia-assign:hover:not(:disabled) { background-color: #ffb700; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255, 195, 0, 0.3) !important; }
+    .btn-sia-assign:disabled { background-color: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
     .cursor-pointer { cursor: pointer; }
     .fw-black { font-weight: 900; }
     .text-xs { font-size: 0.75rem; }
@@ -361,50 +255,107 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 </style>
 
-{{-- SCRIPTS FUNCIONALES MANTENIDOS --}}
+{{-- 
+    TRUCO TÉCNICO: CARGA DE DATOS SIN ERRORES EN VS CODE
+    Colocamos los datos PHP en scripts tipo JSON. El navegador los ignora visualmente,
+    VS Code no los valida como JS, y nosotros los leemos limpios después.
+--}}
+<script type="application/json" id="data-materias">
+    {!! json_encode($materias) !!}
+</script>
+
+<script type="application/json" id="data-materia-activa">
+    {!! json_encode($materia_id) !!}
+</script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         
-        // 1. FILTRO DE MATERIAS
+        // 1. LEER DATOS DEL DOM (Adiós errores rojos)
+        const rawMaterias = document.getElementById('data-materias').textContent;
+        const rawActiva = document.getElementById('data-materia-activa').textContent;
+        
+        const catalogoMaterias = JSON.parse(rawMaterias);
+        const materiaActivaId = JSON.parse(rawActiva);
+
+        // 2. RENDERIZADO DINÁMICO
         const inputMateria = document.getElementById('buscadorMateria');
-        const itemsMateria = document.querySelectorAll('.item-materia');
+        const contenedor = document.getElementById('contenedorMaterias');
+        // const contadorLabel = document.getElementById('contadorMaterias'); // Descomentar si usas el contador
+
+        function renderizarMaterias(filtro = '') {
+            // Optimización: Usamos un array temporal antes de insertar en el DOM
+            let htmlBuffer = '';
+            const limiteVisual = 50; 
+
+            const materiasFiltradas = catalogoMaterias.filter(m => 
+                m.NombreMateria.toLowerCase().includes(filtro.toLowerCase())
+            );
+
+            materiasFiltradas.slice(0, limiteVisual).forEach(materia => {
+                const isActive = (materiaActivaId == materia.IdMateria) ? 'active' : '';
+                const isChecked = (materiaActivaId == materia.IdMateria) ? 'checked' : '';
+                const siglaHtml = materia.Sigla ? `<div class="text-muted item-subtitle mt-1"><i class="bi bi-hash me-1"></i>${materia.Sigla}</div>` : '';
+                const checkIcon = (materiaActivaId == materia.IdMateria) ? `<i class="bi bi-check-circle-fill text-upds-gold fs-5 ms-2 animate__animated animate__zoomIn"></i>` : '';
+                
+                htmlBuffer += `
+                <label class="sia-list-item d-flex align-items-center p-3 mb-2 rounded-3 cursor-pointer item-materia ${isActive}" onclick="seleccionarMateria(${materia.IdMateria})">
+                    <input type="radio" name="IdMateriaRadio" class="d-none" ${isChecked}>
+                    <div class="sia-indicator me-3"></div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold text-dark item-title lh-sm">${materia.NombreMateria}</div>
+                        ${siglaHtml}
+                    </div>
+                    ${checkIcon}
+                </label>`;
+            });
+
+            if(materiasFiltradas.length === 0) {
+                htmlBuffer = `<div class="text-center p-4 text-muted"><small>No se encontraron materias.</small></div>`;
+            }
+
+            contenedor.innerHTML = htmlBuffer;
+        }
+
+        renderizarMaterias();
 
         inputMateria.addEventListener('keyup', function() {
-            const texto = this.value.toLowerCase();
+            renderizarMaterias(this.value);
+        });
+
+        window.seleccionarMateria = function(id) {
+            const form = document.getElementById('formMateriaSelector');
+            const hiddenInput = document.getElementById('inputMateriaId'); // Asegúrate que este ID exista en tu HTML (Columna 1)
             
-            itemsMateria.forEach(item => {
-                const nombre = item.querySelector('.item-title').textContent.toLowerCase();
-                if (nombre.includes(texto)) {
-                    item.classList.remove('d-none');
-                    item.classList.add('d-flex');
-                } else {
-                    item.classList.add('d-none');
-                    item.classList.remove('d-flex');
-                }
-            });
-        });
+            // Si el input hidden no existe en el form izquierdo, lo creamos
+            let input = form.querySelector('input[name="IdMateria"]');
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'IdMateria';
+                form.appendChild(input);
+            }
+            
+            input.value = id;
+            form.submit();
+        };
 
-        // 2. FILTRO DE DOCENTES
+        // 3. FILTRO DOCENTES
         const inputDocente = document.getElementById('buscadorDocente');
-        const itemsDocente = document.querySelectorAll('.item-docente');
-
-        inputDocente.addEventListener('keyup', function() {
-            const texto = this.value.toLowerCase();
-
-            itemsDocente.forEach(item => {
-                const nombre = item.querySelector('.docente-nombre').textContent.toLowerCase();
-                const apellido = item.innerText.toLowerCase();
-                
-                if (nombre.includes(texto) || apellido.includes(texto)) {
-                    item.parentElement.classList.remove('d-none'); // Mostrar col padre
-                    item.parentElement.classList.add('d-block');
-                } else {
-                    item.parentElement.classList.add('d-none'); // Ocultar col padre
-                    item.parentElement.classList.remove('d-block');
+        if(inputDocente) {
+            const itemsDocente = document.getElementsByClassName('item-docente');
+            inputDocente.addEventListener('keyup', function() {
+                const texto = this.value.toLowerCase();
+                for (let i = 0; i < itemsDocente.length; i++) {
+                    const item = itemsDocente[i];
+                    if (item.innerText.toLowerCase().includes(texto)) {
+                        item.classList.remove('d-none');
+                    } else {
+                        item.classList.add('d-none');
+                    }
                 }
             });
-        });
-
+        }
     });
 </script>
 @endsection
