@@ -8,6 +8,7 @@ use App\Http\Controllers\CargaAcademicaController;
 use App\Http\Controllers\FormacionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ChatBotController; // <--- IMPORTANTE: Agregamos esto
 
 /*
 |--------------------------------------------------------------------------
@@ -53,6 +54,10 @@ Route::middleware(['auth'])->group(function () {
     // --- DASHBOARD PRINCIPAL ---
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // --- CHATBOT IA (RUTA AGREGADA) ---
+    // Esta es la ruta que te faltaba y causaba el error
+    Route::post('/chat-ai', [ChatBotController::class, 'chat'])->name('chat.ai');
+
     // --- PERFIL DEL USUARIO (Edición Propia) ---
     Route::controller(ProfileController::class)->group(function () {
         Route::get('/perfil/edit', 'edit')->name('profile.edit');
@@ -91,18 +96,18 @@ Route::middleware(['auth'])->group(function () {
     // --- FORMACIÓN DOCENTE (Registro de Títulos) ---
     Route::post('/formacion', [FormacionController::class, 'store'])->name('formacion.store');
     
-// AÑADIR ESTA LÍNEA AQUÍ:
-Route::post('/formacion/actualizar-pdf', [FormacionController::class, 'updatePDF'])->name('formacion.updatePDF');
+    // Actualización de PDF
+    Route::post('/formacion/actualizar-pdf', [FormacionController::class, 'updatePDF'])->name('formacion.updatePDF');
+
     // =========================================================================
     // 4. ANALÍTICA Y REPORTES (Sincronizado con Carpeta analitica/)
     // =========================================================================
     Route::middleware('can:ver_dashboard')->group(function () {
         
-        // 1. Analítico de Docentes
+        // 1. Analítico de Docentes (Power BI Embedded)
         Route::view('/analitica/acreditacion', 'analitica.acreditacion')->name('analitica.acreditacion');
 
         // 2. Visor de PDF Dinámico
-        // Agregamos ->where('archivo', '.*') para que acepte el punto del ".pdf"
         Route::get('/analitica/reporte/{archivo}', function ($archivo) {
             $titulo = str_replace(['_', '.pdf'], [' ', ''], $archivo);
             

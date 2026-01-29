@@ -1,11 +1,15 @@
 @extends('layouts.app')
 
 @section('content')
-{{-- Contenedor Maestro: Sincronizado con el alto de pantalla del SIA v4.0 --}}
-<div class="container-fluid p-0 bg-slate-50 d-flex flex-column" style="height: calc(100vh - 80px); overflow: hidden;" id="main-report-layout">
+{{-- 
+    CONTENEDOR MAESTRO MEJORADO 
+    Usamos 'h-screen' en lugar de cálculos fijos para asegurar que cubra toda la pantalla.
+    El 'pb-20' da espacio abajo para que no se corte en laptops.
+--}}
+<div class="d-flex flex-column h-screen bg-slate-50 overflow-hidden">
 
-    {{-- 1. HEADER INSTITUCIONAL - REPORTE DE ACREDITACIÓN --}}
-    <div class="px-4 py-3 d-flex justify-content-between align-items-center flex-shrink-0 bg-white border-bottom shadow-sm no-print">
+    {{-- 1. HEADER INSTITUCIONAL --}}
+    <div class="px-4 py-3 d-flex justify-content-between align-items-center flex-shrink-0 bg-white border-bottom shadow-sm no-print z-10 relative">
         <div>
             <h6 class="text-[10px] fw-black text-slate-400 uppercase tracking-[2px] mb-1">Dirección de Acreditación • Santa Cruz</h6>
             <h3 class="fw-black text-upds-blue mb-0 tracking-tighter d-flex align-items-center">
@@ -29,11 +33,12 @@
         </div>
     </div>
 
-    {{-- 2. CUERPO DEL VISOR (CONSOLA PBI) --}}
-    <div class="px-4 py-3 flex-grow-1 overflow-hidden main-print-area">
-        <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white h-100 d-flex flex-column print-shadow-none">
+    {{-- 2. CUERPO DEL VISOR (ÁREA DEL REPORTE) --}}
+    {{-- 'flex-grow-1' hace que ocupe todo el espacio restante disponible --}}
+    <div class="flex-grow-1 p-3 p-md-4 overflow-hidden position-relative">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white h-100 d-flex flex-column">
             
-            {{-- BARRA DE ESTADO EJECUTIVA --}}
+            {{-- BARRA DE ESTADO --}}
             <div class="bg-slate-50 border-bottom py-2 px-4 d-flex justify-content-between align-items-center flex-shrink-0 no-print">
                 <div class="d-flex align-items-center gap-3">
                     <span class="badge bg-upds-blue text-white px-3 py-2 rounded-pill fw-bold text-[10px] shadow-sm">
@@ -50,31 +55,32 @@
                 </div>
             </div>
 
-            {{-- CONTENEDOR DEL IFRAME --}}
-            <div class="position-relative flex-grow-1 bg-white">
+            {{-- CONTENEDOR DEL IFRAME (AJUSTE CLAVE) --}}
+            {{-- Usamos 'h-100' para que el iframe llene la tarjeta --}}
+            <div class="position-relative flex-grow-1 bg-white h-100 w-100">
                 {{-- Loader Visual --}}
                 <div class="position-absolute top-50 start-50 translate-middle text-center z-0 no-print">
                     <div class="spinner-border text-upds-blue mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
                     <p class="text-slate-400 small fw-bold tracking-widest uppercase">Cargando Inteligencia Educativa...</p>
                 </div>
 
-                {{-- Iframe del Reporte Ajustado --}}
+                {{-- Iframe del Nuevo Reporte --}}
                 <iframe 
                     id="powerbi-frame"
-                    title="DBAcreditacionEducativa" 
+                    title="InformeDocentes" 
                     width="100%" 
                     height="100%" 
-                    src="https://app.powerbi.com/reportEmbed?reportId=6f3c50ce-b969-4cc1-8cd3-bb4a3507202d&autoAuth=true&ctid=cf263038-f11c-49d2-9183-556a34b747e2" 
+                    src="https://app.powerbi.com/reportEmbed?reportId=731124ea-fada-4b61-855e-98d4c1e92389&autoAuth=true&ctid=cf263038-f11c-49d2-9183-556a34b747e2" 
                     frameborder="0" 
                     allowFullScreen="true"
-                    class="position-relative z-1">
+                    class="position-relative z-1 w-100 h-100 d-block">
                 </iframe>
             </div>
 
             {{-- FOOTER TÉCNICO --}}
-            <div class="bg-upds-blue text-white py-2 px-4 d-flex justify-content-between align-items-center flex-shrink-0" style="font-size: 10px;">
+            <div class="bg-upds-blue text-white py-1 px-4 d-flex justify-content-between align-items-center flex-shrink-0" style="font-size: 10px;">
                 <div class="font-monospace opacity-50">
-                    SIA-PBI-ID: 6F3C50CE • ENGINE: <strong>V4.0</strong>
+                    SIA-PBI-ID: 731124EA • ENGINE: <strong>V4.0</strong>
                 </div>
                 <div class="fw-black text-upds-gold tracking-widest uppercase">
                     Vicerrectorado Académico • UPDS 2026
@@ -92,6 +98,9 @@
         --upds-blue-dark: #001d3d;
     }
 
+    /* Aseguramos que el contenedor ocupe la pantalla correcta */
+    .h-screen { height: 100vh; }
+    
     .text-upds-blue { color: var(--upds-blue) !important; }
     .bg-upds-blue { background-color: var(--upds-blue) !important; }
     .text-upds-gold { color: var(--upds-gold) !important; }
@@ -126,24 +135,24 @@
         100% { box-shadow: 0 0 0 0 rgba(21, 128, 61, 0); }
     }
 
-    /* Reglas para Impresión Limpia del Reporte */
+    /* Reglas para Impresión */
     @media print {
-        aside, nav, .sia-header, .no-print { display: none !important; }
-        body, html, #main-report-layout { 
-            height: auto !important; 
-            background: white !important; 
-            margin: 0 !important;
-            padding: 0 !important;
+        aside, nav, .no-print { display: none !important; }
+        body, html { 
+            height: 100% !important; 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            overflow: visible !important;
         }
-        .main-print-area { padding: 0 !important; height: 100vh !important; }
-        .card { border: none !important; }
-        @page { size: landscape; margin: 0.5cm; }
+        .card { border: none !important; shadow: none !important; }
+        iframe { height: 100vh !important; width: 100vw !important; }
     }
 </style>
 
 <script>
     function reloadFrame() {
         const iframe = document.getElementById('powerbi-frame');
+        // Pequeño truco para forzar recarga limpia sin caché
         iframe.src = iframe.src;
     }
 </script>
