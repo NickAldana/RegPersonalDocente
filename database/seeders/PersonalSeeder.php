@@ -23,9 +23,6 @@ class PersonalSeeder extends Seeder
             ]);
         }
 
-        // ==========================================
-        // 1. USUARIOS (Base de Seguridad)
-        // ==========================================
         $usuarios = [
             ['UsuarioID' => 1, 'NombreUsuario' => 'sc.abel.catari.f', 'Correo' => 'sc.abel.catari.f@upds.net.bo', 'Password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Activo' => 1],
             ['UsuarioID' => 2, 'NombreUsuario' => 'sc.adolfo.choquellampa.c', 'Correo' => 'sc.adolfo.choquellampa.c@upds.net.bo', 'Password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Activo' => 1],
@@ -115,10 +112,9 @@ class PersonalSeeder extends Seeder
             ['UsuarioID' => 86, 'NombreUsuario' => 'sc.yolanda.moron.z', 'Correo' => 'sc.yolanda.moron.z@upds.net.bo', 'Password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Activo' => 1],
             ['UsuarioID' => 87, 'NombreUsuario' => 'sc.ysnaider.castro.s', 'Correo' => 'sc.ysnaider.castro.s@upds.net.bo', 'Password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Activo' => 1],
             ['UsuarioID' => 88, 'NombreUsuario' => 'rtoyama', 'Correo' => 'r.toyama@uagrm.edu.bo', 'Password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Activo' => 1],
-            
         ];
 
-        // Insertar en bloques por seguridad
+        // Insertar USUARIOS primero
         foreach (array_chunk($usuarios, 50) as $chunk) {
             DB::table('Usuario')->insertOrIgnore($chunk);
         }
@@ -218,10 +214,26 @@ class PersonalSeeder extends Seeder
 
             ];
 
-        // Insertar en bloques por seguridad
+        // Insertar PERSONAL
         foreach (array_chunk($personal, 50) as $chunk) {
             DB::table('Personal')->insertOrIgnore($chunk);
         }
+
+        // =======================================================
+        // 3. ACTUALIZACIÓN CRUCIAL: EL CIERRE DEL CÍRCULO (SEG-02)
+        // =======================================================
+        // Aquí es donde solucionamos el "Huevo y la Gallina".
+        // Actualizamos cada usuario para decirle quién es su personal.
+        
+        $allPersonal = DB::table('Personal')->get();
+
+        foreach ($allPersonal as $p) {
+            DB::table('Usuario')
+                ->where('UsuarioID', $p->UsuarioID)
+                ->update(['Idpersonal' => $p->PersonalID]);
+        }
+
+        $this->command->info('✅ ¡Usuarios y Personal vinculados correctamente (SEG-02)!');
 
         // ==========================================
         // 3. FORMACIÓN ACADÉMICA (Parseado del SQL de 512 líneas)

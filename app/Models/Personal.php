@@ -154,4 +154,27 @@ class Personal extends Model
             });
         });
     }
+    /**
+     * Calcula el nivel de Seniority basado en la experiencia.
+     * Uso: <span class="badge {{ $p->seniority_color }}">{{ $p->seniority_label }}</span>
+     */
+    public function getSeniorityLabelAttribute()
+    {
+        $anios = $this->Añosexperiencia ?? 0;
+        
+        if ($anios >= 15) return 'MÁSTER';
+        if ($anios >= 10) return 'SENIOR';
+        if ($anios >= 5)  return 'JUNIOR';
+        return 'INICIAL';
+    }
+
+    public function getSeniorityColorAttribute()
+    {
+        $anios = $this->Añosexperiencia ?? 0;
+        
+        if ($anios >= 15) return 'bg-purple-100 text-purple-700 border-purple-200'; // Morado Épico
+        if ($anios >= 10) return 'bg-upds-gold text-white border-warning'; // Dorado Legendario
+        if ($anios >= 5)  return 'bg-blue-100 text-blue-700 border-blue-200'; // Azul Raro
+        return 'bg-slate-100 text-slate-500 border-slate-200'; // Gris Común
+    }
 }

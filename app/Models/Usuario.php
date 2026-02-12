@@ -79,10 +79,12 @@ class Usuario extends Authenticatable
     // RELACIONES (Eloquents)
     // ========================================================================
 
-    public function personal(): HasOne
-    {
-        return $this->hasOne(Personal::class, 'UsuarioID', 'UsuarioID');
-    }
+   // USAR ESTO SI YA LLENASTE EL CAMPO Idpersonal EN LA TABLA USUARIO
+public function personal()
+{
+    // belongsTo(Modelo, ClaveForaneaLocal, ClavePrimariaOtroModelo)
+    return $this->belongsTo(Personal::class, 'Idpersonal', 'PersonalID');
+}
 
     public function bitacoras(): HasMany
     {

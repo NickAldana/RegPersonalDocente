@@ -13,25 +13,51 @@ class UsuarioController extends Controller
     /**
      * SEG-02: Listado maestro de cuentas de acceso.
      */
-    public function index(Request $request)
-    {
-        $query = Usuario::with([
-            'personal:PersonalID,Nombrecompleto,CargoID', 
-            'personal.cargo:CargoID,Nombrecargo'
+  public function index(Request $request)
+{
+    /** @var \App\Models\Usuario $currentUser */
+    $currentUser = Auth::user();
+
+    // 1. CONSULTA BASE (Se añade UsuarioID a la carga de personal)
+    $query = Usuario::select(['UsuarioID', 'NombreUsuario', 'Correo', 'Activo', 'Idpersonal'])
+        ->with([
+            // REGLA ORO: Se agregó UsuarioID al final para que la relación no sea NULL
+            'personal:PersonalID,Nombrecompleto,CargoID,Fotoperfil,Añosexperiencia,UsuarioID', 
+            'personal.cargo:CargoID,Nombrecargo,nivel_jerarquico'
         ]);
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('NombreUsuario', 'like', "%{$search}%")
-                  ->orWhere('Correo', 'like', "%{$search}%");
-            });
-        }
-
-        $usuarios = $query->orderBy('UsuarioID', 'desc')->paginate(15);
-        
-        return view('seguridad.usuarios.index', compact('usuarios'));
+    // 2. SEGURIDAD: VISIÓN DE TÚNEL (SEG-04)
+    if (!$currentUser->canDo('acceso_total')) {
+        $miNivel = $currentUser->personal->cargo->nivel_jerarquico ?? 1000;
+        $query->whereHas('personal.cargo', function($q) use ($miNivel) {
+            $q->where('nivel_jerarquico', '>=', $miNivel);
+        });
     }
+
+    // 3. FILTROS (Búsqueda y Estado)
+    if ($request->filled('search')) {
+        $search = trim($request->search);
+        $query->where(function($q) use ($search) {
+            $q->where('NombreUsuario', 'like', "%{$search}%")
+              ->orWhere('Correo', 'like', "%{$search}%")
+              ->orWhereHas('personal', function($qp) use ($search) {
+                  $qp->where('Nombrecompleto', 'like', "%{$search}%");
+              });
+        });
+    }
+
+    if ($request->filled('estado')) {
+        $query->where('Activo', $request->estado);
+    }
+
+    // 4. RESULTADOS PAGINADOS
+    $usuarios = $query->orderBy('Activo', 'desc')
+                      ->orderBy('UsuarioID', 'desc')
+                      ->paginate(15)
+                      ->withQueryString();
+
+    return view('seguridad.usuarios.index', compact('usuarios'));
+}
 
     /**
      * Muestra el formulario de edición.
